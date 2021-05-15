@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "457976706769",
+    "project_id": "flutterparkingapp-7c7af",
+    "storage_bucket": "flutterparkingapp-7c7af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457976706769:android:6da885e81aa3b091ceb7f0",
+        "android_client_info": {
+          "package_name": "com.example.gmap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "457976706769-s89fkqep14575m50n12ti0rm2i4gq05v.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzt8zak_OsVlmg_yq_HyVu5wOoM0hftBA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "457976706769-s89fkqep14575m50n12ti0rm2i4gq05v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
