@@ -31,20 +31,32 @@ class Parking extends StatefulWidget {
 class _ParkingState extends State<Parking> {
   StreamSubscription _locationSubscription;
   Location _locationTracker = Location();
-  Marker marker;
-  Circle circle;
   GoogleMapController _controller;
-
+  Marker marker = Marker(markerId: MarkerId("home"));
+  Circle circle = Circle(circleId: CircleId("car"));
+  var markers = [];
   List<Marker> myMarker = [];
+  List<Circle> circles = [];
 
   _handlePress(LatLng pressedPoint) {
     setState(() {
       myMarker = [];
+      circles = [];
+
       myMarker.add(Marker(
         markerId: MarkerId(pressedPoint.toString()),
         position: pressedPoint,
       ));
+
+      circles.add(Circle(
+          circleId: CircleId("spot"),
+          radius: 400,
+          zIndex: 1,
+          strokeColor: Colors.blue,
+          center: pressedPoint,
+          fillColor: Colors.blue.withAlpha(70)));
     });
+    print(pressedPoint);
   }
 
   static final CameraPosition initialLocation = CameraPosition(
@@ -121,6 +133,8 @@ class _ParkingState extends State<Parking> {
   @override
   Widget build(BuildContext context) {
     final placesProvider = Provider.of<Future<List<Place>>>(context);
+    final currentPosition = Provider.of<Position>(context);
+    final markerService = MarkerService();
 
     return FutureProvider(
       create: (context) => placesProvider,
@@ -128,26 +142,64 @@ class _ParkingState extends State<Parking> {
         appBar: AppBar(
           title: Text('Available Parking'),
         ),
-        body: GoogleMap(
-          mapType: MapType.normal,
-          initialCameraPosition: initialLocation,
-          markers: Set.from(myMarker),
-          circles: Set.of((circle != null) ? [circle] : []),
-          onMapCreated: (GoogleMapController controller) {
-            getCurrentLocation();
-            _controller = controller;
-          },
-          onLongPress: _handlePress,
-
-          trafficEnabled: true,
-          compassEnabled: true,
-          zoomControlsEnabled: false,
-        ),
+        body: (currentPosition != null)
+            ? Consumer<List<Place>>(builder: (_, places, __) {
+                markers = (places != null)
+                    ? markerService.getMarkers(places)
+                    : List<Marker>();
+                return (places != null)
+                    ? Container(
+                        child: GoogleMap(
+                          mapType: MapType.normal,
+                          initialCameraPosition: initialLocation,
+                          markers:
+                              Set<Marker>.of([...myMarker, ...markers, marker]),
+                          circles: Set<Circle>.of([...circles, circle]),
+                          onMapCreated: (GoogleMapController controller) {
+                            getCurrentLocation();
+                            _controller = controller;
+                          },
+                          onLongPress: _handlePress,
+                          trafficEnabled: true,
+                          compassEnabled: true,
+                          zoomControlsEnabled: false,
+                        ),
+                      )
+                    : Center(
+                        child: CircularProgressIndicator(),
+                      );
+              })
+            : null,
         floatingActionButton: FloatingActionButton(
             elevation: 8.0,
             child: Icon(Icons.local_parking_rounded),
             onPressed: () {
-              NewParking();
+              AlertDialog alert = AlertDialog(
+                title: Text("Is there available parking here?"),
+                actions: [
+                  MaterialButton(
+                    elevation: 5.0,
+                    child: Text('Yes'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  MaterialButton(
+                    elevation: 5.0,
+                    child: Text('No'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+                elevation: 20,
+              );
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return alert;
+                },
+              );
             }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
