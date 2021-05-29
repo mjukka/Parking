@@ -1,5 +1,7 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:mPark/main.dart';
+import 'package:mPark/screens/authenticationRouter.dart';
+import 'package:mPark/screens/home.dart';
 import './MobileLoginPage.dart';
 import '../resources/ConstantMethods.dart';
 import '../resources/Resources.dart';
@@ -25,7 +27,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       appBar: TopBar(
         title: !isRegistered ? Kstrings.login : Kstrings.register,
         child: kBackBtn,
@@ -34,22 +36,22 @@ class _LoginPageState extends State<LoginPage> {
         },
       ),
       floatingActionButton: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(left: 31),
-            child: FloatingActionButton.extended(
-              heroTag: 'abc',
-              label: Container(),
-              onPressed: () {
-                kopenPageBottom(context, MobileLoginPage());
-              },
-              icon: Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: Icon(EvaIcons.phone),
-              ),
-            ),
-          ),
+          // Padding(
+          //   padding: const EdgeInsets.only(left: 31),
+          //   child: FloatingActionButton.extended(
+          //     heroTag: 'abc',
+          //     label: Container(),
+          //     onPressed: () {
+          //       kopenPageBottom(context, MobileLoginPage());
+          //     },
+          //     icon: Padding(
+          //       padding: const EdgeInsets.only(left: 15),
+          //       child: Icon(EvaIcons.phone),
+          //     ),
+          //   ),
+          // ),                                               // Mobile Login Button
           FloatingActionButton.extended(
               label: Text(
                 buttonType == ButtonType.LOGIN
@@ -58,13 +60,14 @@ class _LoginPageState extends State<LoginPage> {
                 style: ktitleStyle,
               ),
               onPressed: () {
-                kopenPage(context, MyApp());
+                kopenPage(context, HomeLogged());
               },
               icon: !isRegistered ? Icon(EvaIcons.logIn) : Icon(EvaIcons.checkmarkCircle)),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Hero(
               tag: 'imageee',

@@ -46,6 +46,8 @@ class Kstrings {
   static const confirm_password = 'Confirm Password';
   static const confirm_password_hint = 'Same as above';
 
+  static const location = 'Location';
+  static const location_hint = '32.123456,12.123456';
 
   static const mobile_no = 'Mobile No.';
   static const mobile_hint = '6912345678';

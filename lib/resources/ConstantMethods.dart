@@ -33,6 +33,14 @@ Widget kLoginBtn = Icon(
   EvaIcons.logIn,
 );
 
+Widget kLogoutBtn = Icon(
+  EvaIcons.logOut,
+);
+
+Widget kAccountBtn = Icon(
+  EvaIcons.person,
+);
+
 var kTextFieldDecoration = InputDecoration(
   border: OutlineInputBorder(
     borderRadius: BorderRadius.circular(16),

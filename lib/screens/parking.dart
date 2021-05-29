@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geocoder/geocoder.dart' as geoCo;
+import 'package:geoflutterfire/geoflutterfire.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -10,7 +14,7 @@ import 'package:location/location.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mPark/screens/newParking.dart';
-import 'package:mPark/services/geolocator_service.dart';
+import 'package:mPark/services/places_service.dart';
 import 'package:mPark/services/marker_service.dart';
 import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
@@ -31,13 +35,26 @@ class _ParkingState extends State<Parking> {
   Circle circle;
   GoogleMapController _controller;
 
-  static final CameraPosition initialLocation = CameraPosition( 
+  List<Marker> myMarker = [];
+
+  _handlePress(LatLng pressedPoint) {
+    setState(() {
+      myMarker = [];
+      myMarker.add(Marker(
+        markerId: MarkerId(pressedPoint.toString()),
+        position: pressedPoint,
+      ));
+    });
+  }
+
+  static final CameraPosition initialLocation = CameraPosition(
     target: LatLng(40.30069, 21.78896),
-    zoom: 14.8746,
+    zoom: 14.70,
   );
 
   Future<Uint8List> getMarker() async {
-    ByteData byteData = await DefaultAssetBundle.of(context).load("assets/images/car_icon.png");
+    ByteData byteData =
+        await DefaultAssetBundle.of(context).load("assets/images/car_icon.png");
     return byteData.buffer.asUint8List();
   }
 
@@ -65,7 +82,6 @@ class _ParkingState extends State<Parking> {
 
   void getCurrentLocation() async {
     try {
-
       Uint8List imageData = await getMarker();
       var location = await _locationTracker.getLocation();
 
@@ -75,18 +91,18 @@ class _ParkingState extends State<Parking> {
         _locationSubscription.cancel();
       }
 
-
-      _locationSubscription = _locationTracker.onLocationChanged.listen((newLocalData) {
+      _locationSubscription =
+          _locationTracker.onLocationChanged.listen((newLocalData) {
         if (_controller != null) {
-          _controller.animateCamera(CameraUpdate.newCameraPosition(new CameraPosition(
-              bearing: 192.8334901395799,
-              target: LatLng(newLocalData.latitude, newLocalData.longitude),
-              tilt: 0,
-              zoom: 17.60)));
+          _controller.animateCamera(CameraUpdate.newCameraPosition(
+              new CameraPosition(
+                  bearing: 192.8334901395799,
+                  target: LatLng(newLocalData.latitude, newLocalData.longitude),
+                  tilt: 0,
+                  zoom: 17.60)));
           updateMarkerAndCircle(newLocalData, imageData);
         }
       });
-
     } on PlatformException catch (e) {
       if (e.code == 'PERMISSION_DENIED') {
         debugPrint("Permission Denied");
@@ -104,29 +120,37 @@ class _ParkingState extends State<Parking> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Available Parking'),
+    final placesProvider = Provider.of<Future<List<Place>>>(context);
+
+    return FutureProvider(
+      create: (context) => placesProvider,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Available Parking'),
+        ),
+        body: GoogleMap(
+          mapType: MapType.normal,
+          initialCameraPosition: initialLocation,
+          markers: Set.from(myMarker),
+          circles: Set.of((circle != null) ? [circle] : []),
+          onMapCreated: (GoogleMapController controller) {
+            getCurrentLocation();
+            _controller = controller;
+          },
+          onLongPress: _handlePress,
+
+          trafficEnabled: true,
+          compassEnabled: true,
+          zoomControlsEnabled: false,
+        ),
+        floatingActionButton: FloatingActionButton(
+            elevation: 8.0,
+            child: Icon(Icons.local_parking_rounded),
+            onPressed: () {
+              NewParking();
+            }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
-      body: GoogleMap(
-        mapType: MapType.normal,
-        zoomControlsEnabled: false,
-        initialCameraPosition: initialLocation,
-        markers: Set.of((marker != null) ? [marker] : []),
-        circles: Set.of((circle != null) ? [circle] : []),
-        onMapCreated: (GoogleMapController controller) {
-          getCurrentLocation();
-          _controller = controller;
-        },
-        trafficEnabled: true,
-      ),
-      floatingActionButton: FloatingActionButton(
-        elevation: 8.0,
-        child: Icon(Icons.location_searching),
-        onPressed: () {
-          NewParking();
-        }),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

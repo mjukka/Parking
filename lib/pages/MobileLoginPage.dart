@@ -16,7 +16,7 @@ class _MobileLoginPageState extends State<MobileLoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomPadding: false,
+      resizeToAvoidBottomInset: false,
       appBar: TopBar(
         title: Kstrings.mobile,
         child: kBackBtn,
