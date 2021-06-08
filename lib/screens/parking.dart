@@ -16,7 +16,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:mPark/screens/newParking.dart';
 import 'package:mPark/services/places_service.dart';
 import 'package:mPark/services/marker_service.dart';
-import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/models/place.dart';
 
@@ -49,8 +48,8 @@ class _ParkingState extends State<Parking> {
       ));
 
       circles.add(Circle(
-          circleId: CircleId("spot"),
-          radius: 400,
+          circleId: CircleId("diam"),
+          radius: 150,
           zIndex: 1,
           strokeColor: Colors.blue,
           center: pressedPoint,
@@ -175,7 +174,7 @@ class _ParkingState extends State<Parking> {
             child: Icon(Icons.local_parking_rounded),
             onPressed: () {
               AlertDialog alert = AlertDialog(
-                title: Text("Is there available parking here?"),
+                title: Text("Did you park?"),
                 actions: [
                   MaterialButton(
                     elevation: 5.0,

@@ -135,6 +135,7 @@ class _LoginPageState extends State<LoginPage> {
                     width: MediaQuery.of(context).size.width,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         FloatingActionButton.extended(
                           heroTag: 'needHelp',

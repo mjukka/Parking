@@ -1,7 +1,9 @@
 import 'dart:ui';
 
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mPark/screens/newParking.dart';
 import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/screens/parking.dart';
@@ -18,8 +20,8 @@ class _HomeState extends State<Home> {
 
   final pages = [
     Home(),
-    // Search(),
-    LoginPage(),
+    NewParking(), // Search(),
+    LoginPage(), // My Account(),
   ];
 
   @override
@@ -95,6 +97,8 @@ class _HomeState extends State<Home> {
         onTap: (index) {
           setState(() {
             _currentIndex = index;
+            Navigator.push(
+              context, CupertinoPageRoute(builder: (context) => pages[_currentIndex]));
           });
         },
       ),
