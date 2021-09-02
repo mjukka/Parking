@@ -17,15 +17,24 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // String idHint = string.student_id;
+  FocusScopeNode currentFocus;
   bool isRegistered = false;
   String notYetRegisteringText = Kstrings.not_registered;
   ButtonType buttonType = ButtonType.LOGIN;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  unfocus() {
+    currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return GestureDetector(
+      onTap: unfocus,
+      child: Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
       appBar: TopBar(
@@ -66,6 +75,7 @@ class _LoginPageState extends State<LoginPage> {
         ],
       ),
       body: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
@@ -133,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     height: 50,
                     width: MediaQuery.of(context).size.width,
-                    child: Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
@@ -186,6 +196,7 @@ class _LoginPageState extends State<LoginPage> {
           ],
         ),
       ),
+    )
     );
   }
 }

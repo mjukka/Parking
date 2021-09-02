@@ -1,28 +1,26 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geocoder/geocoder.dart' as geoCo;
-import 'package:geoflutterfire/geoflutterfire.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:mPark/methods/isInsideCircle.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:mPark/models/Parkings.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:mPark/screens/newParking.dart';
 import 'package:mPark/services/places_service.dart';
 import 'package:mPark/services/marker_service.dart';
-import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/models/place.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 class Parking extends StatefulWidget {
   Parking({Key key, this.title}) : super(key: key);
   final String title;
-
   @override
   _ParkingState createState() => _ParkingState();
 }
@@ -31,16 +29,94 @@ class _ParkingState extends State<Parking> {
   StreamSubscription _locationSubscription;
   Location _locationTracker = Location();
   GoogleMapController _controller;
-  Marker marker = Marker(markerId: MarkerId("home"));
-  Circle circle = Circle(circleId: CircleId("car"));
+  bool toggleMarkers = true;
+  bool togglePOI = true;
+  bool toggleCamLock = true;
+  Marker marker = Marker(markerId: MarkerId("car"));
+  Circle circle = Circle(circleId: CircleId("loc"));
   var markers = [];
   List<Marker> myMarker = [];
   List<Circle> circles = [];
+  PolylinePoints polylinePoints;
+  Map<PolylineId, Polyline> polylines = {};
+  List<LatLng> polylineCoordinates = [];
+  bool isInside = false;
+  List<Parkings> parkings = [];
+  LatLng pressedPointStorage;
 
-  _handlePress(LatLng pressedPoint) {
+  //ALERT FOUND PARKING
+  Future<void> foundParkingAlert(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Did you park?'),
+          actions: <Widget>[
+            MaterialButton(
+              elevation: 5.0,
+              child: Text('Yes'),
+              onPressed: () {
+                parkings.add(Parkings(
+                    user: "testUser",
+                    parkVicinity: pressedPointStorage,
+                    parkLocation: marker.position,
+                    successParking: true));
+                Navigator.of(context).pop();
+              },
+            ),
+            MaterialButton(
+              child: Text('No'),
+              onPressed: () {
+                parkings.add(Parkings(
+                    user: "testUser",
+                    parkVicinity: pressedPointStorage,
+                    parkLocation: marker.position,
+                    successParking: false));
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void initState() {
+    super.initState();
+    getCurrentLocation();
+  }
+
+  _createPolylines(double startLatitude, double startLongitude,
+      double destinationLatitude, double destinationLongitude) async {
+    polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      "AIzaSyCYYXHG1_Dw1HABNRjyDihnbOq-Z1EJ0YE",
+      PointLatLng(startLatitude, startLongitude),
+      PointLatLng(destinationLatitude, destinationLongitude),
+      travelMode: TravelMode.driving,
+    );
+
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
+    }
+    PolylineId id = PolylineId('poly');
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: Colors.blue,
+      points: polylineCoordinates,
+      width: 10,
+      zIndex: 0,
+    );
+    polylines[id] = polyline;
+  }
+
+  handlePress(LatLng pressedPoint) {
     setState(() {
       myMarker = [];
       circles = [];
+      polylineCoordinates = [];
 
       myMarker.add(Marker(
         markerId: MarkerId(pressedPoint.toString()),
@@ -49,17 +125,39 @@ class _ParkingState extends State<Parking> {
 
       circles.add(Circle(
           circleId: CircleId("diam"),
-          radius: 150,
+          radius: 200,
           zIndex: 1,
           strokeColor: Colors.blue,
           center: pressedPoint,
           fillColor: Colors.blue.withAlpha(70)));
     });
+
+    pressedPointStorage = pressedPoint;
+    polylineCoordinates = [];
+    polylines = {};
     print(pressedPoint);
+    print(marker.position);
+
+    setState(() {
+      isInside = isInsideCircle(
+          marker.position.latitude,
+          marker.position.longitude,
+          pressedPoint.latitude,
+          pressedPoint.longitude);
+    });
+    print(isInsideCircle(circle.center.latitude, circle.center.longitude,
+        pressedPoint.latitude, pressedPoint.longitude));
+  }
+
+  _clearMarkers(LatLng foo) {
+    myMarker = [];
+    circles = [];
+    polylineCoordinates = [];
+    polylines = {};
   }
 
   static final CameraPosition initialLocation = CameraPosition(
-    target: LatLng(40.30069, 21.78896),
+    target: LatLng(40.3011, 21.7882),
     zoom: 14.70,
   );
 
@@ -73,7 +171,7 @@ class _ParkingState extends State<Parking> {
     LatLng latlng = LatLng(newLocalData.latitude, newLocalData.longitude);
     this.setState(() {
       marker = Marker(
-          markerId: MarkerId("home"),
+          markerId: MarkerId("car"),
           position: latlng,
           rotation: newLocalData.heading,
           draggable: false,
@@ -82,7 +180,7 @@ class _ParkingState extends State<Parking> {
           anchor: Offset(0.5, 0.5),
           icon: BitmapDescriptor.fromBytes(imageData));
       circle = Circle(
-          circleId: CircleId("car"),
+          circleId: CircleId("loc"),
           radius: newLocalData.accuracy,
           zIndex: 1,
           strokeColor: Colors.blue,
@@ -105,14 +203,23 @@ class _ParkingState extends State<Parking> {
       _locationSubscription =
           _locationTracker.onLocationChanged.listen((newLocalData) {
         if (_controller != null) {
-          _controller.animateCamera(CameraUpdate.newCameraPosition(
-              new CameraPosition(
-                  bearing: 192.8334901395799,
-                  target: LatLng(newLocalData.latitude, newLocalData.longitude),
-                  tilt: 0,
-                  zoom: 17.60)));
+          if (toggleCamLock) {
+            _controller.animateCamera(CameraUpdate.newCameraPosition(
+                new CameraPosition(
+                    bearing: 0,
+                    target:
+                        LatLng(newLocalData.latitude, newLocalData.longitude),
+                    tilt: 0,
+                    zoom: 17.60)));
+            toggleCamLock = false;
+          }
           updateMarkerAndCircle(newLocalData, imageData);
         }
+        isInside = isInsideCircle(
+            marker.position.latitude,
+            marker.position.longitude,
+            pressedPointStorage.latitude,
+            pressedPointStorage.longitude);
       });
     } on PlatformException catch (e) {
       if (e.code == 'PERMISSION_DENIED') {
@@ -138,8 +245,56 @@ class _ParkingState extends State<Parking> {
     return FutureProvider(
       create: (context) => placesProvider,
       child: Scaffold(
+        drawer: Drawer(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+            OutlinedButton(
+              child: Text('Where did I park?'),
+              onPressed: () {
+                if (parkings.length != 0) {
+                  myMarker.add(Marker(
+                    markerId: MarkerId("mycar"),
+                    position: parkings.last.parkLocation,
+                  ));
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ]),
+        ),
         appBar: AppBar(
           title: Text('Available Parking'),
+          actions: [
+            PopupMenuButton(
+              tooltip: 'Filters',
+                icon: Icon(Icons.filter_alt_rounded),
+                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                      PopupMenuItem(
+                        child: TextButton.icon(
+                          icon: Icon(Icons.garage_rounded),
+                          label: Text('Toggle parking icons On/Off'),
+                          onPressed: () {
+                            toggleMarkers = !toggleMarkers;
+                          }
+                        ),
+                      ),
+                      PopupMenuItem(
+                        child: TextButton.icon(
+                            icon: Icon(Icons.location_off),
+                            label: Text('Toggle location icons On/Off'),
+                            onPressed: () {
+                              togglePOI
+                                  ? _controller.setMapStyle(
+                                      '[{"featureType": "poi","stylers": [{"visibility": "off"}]}]')
+                                  : _controller.setMapStyle(
+                                      '[{"featureType": "poi","stylers": [{"visibility": "on"}]}]');
+                              togglePOI = !togglePOI;
+                            }
+                          ),
+                      ),
+                    ]),
+          ],
         ),
         body: (currentPosition != null)
             ? Consumer<List<Place>>(builder: (_, places, __) {
@@ -151,17 +306,21 @@ class _ParkingState extends State<Parking> {
                         child: GoogleMap(
                           mapType: MapType.normal,
                           initialCameraPosition: initialLocation,
-                          markers:
-                              Set<Marker>.of([...myMarker, ...markers, marker]),
+                          markers: toggleMarkers
+                              ? Set<Marker>.of(
+                                  [...myMarker, ...markers, marker])
+                              : Set<Marker>.of([...myMarker, marker]),
                           circles: Set<Circle>.of([...circles, circle]),
+                          polylines: Set<Polyline>.of(polylines.values),
                           onMapCreated: (GoogleMapController controller) {
                             getCurrentLocation();
                             _controller = controller;
                           },
-                          onLongPress: _handlePress,
+                          onLongPress: handlePress,
+                          onTap: _clearMarkers,
                           trafficEnabled: true,
-                          compassEnabled: true,
                           zoomControlsEnabled: false,
+                          mapToolbarEnabled: false,
                         ),
                       )
                     : Center(
@@ -169,233 +328,42 @@ class _ParkingState extends State<Parking> {
                       );
               })
             : null,
-        floatingActionButton: FloatingActionButton(
-            elevation: 8.0,
-            child: Icon(Icons.local_parking_rounded),
-            onPressed: () {
-              AlertDialog alert = AlertDialog(
-                title: Text("Did you park?"),
-                actions: [
-                  MaterialButton(
-                    elevation: 5.0,
-                    child: Text('Yes'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                  MaterialButton(
-                    elevation: 5.0,
-                    child: Text('No'),
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-                elevation: 20,
-              );
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return alert;
-                },
-              );
-            }),
+        floatingActionButton: isInside
+            ? FloatingActionButton(
+              heroTag: 'parkbutton',
+                elevation: 8.0,
+                child: Icon(Icons.local_parking_rounded),
+                onPressed: () {
+                  foundParkingAlert(context);
+                })
+            : FloatingActionButton.extended(
+                heroTag: 'parkbutton',
+                elevation: 8.0,
+                label: Text('Navigate'),
+                icon: Icon(Icons.local_parking_rounded),
+                onPressed: () {
+                  if (pressedPointStorage != null) {
+                    //meta to clearmarkers an patisw navigate bgazei pali directions
+                    polylineCoordinates = [];
+                    polylines = {};
+                    _createPolylines(
+                        marker.position.latitude,
+                        marker.position.longitude,
+                        pressedPointStorage.latitude,
+                        pressedPointStorage.longitude);
+                  } else {
+                    Fluttertoast.showToast(
+                        msg: "Please select an area",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                        fontSize: 18.0);
+                  }
+                }),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
 }
-
-/*
-class Parking extends StatefulWidget {
-  @override
-  _ParkingState createState() => _ParkingState();
-}
-
-class _ParkingState extends State<Parking> {
-
-  int _currentIndex = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final currentPosition = Provider.of<Position>(context);
-    final placesProvider = Provider.of<Future<List<Place>>>(context);
-    final geoService = GeoLocatorService();
-    final markerService = MarkerService();
-
-    return FutureProvider(
-      create: (context) => placesProvider,
-      child: Scaffold(
-        body: (currentPosition != null)
-            ? Consumer<List<Place>>(
-                builder: (_, places, __) {
-                  var markers = (places != null)
-                      ? markerService.getMarkers(places)
-                      : List<Marker>();
-                  return (places != null)
-                      ? Column(
-                          children: <Widget>[
-                            Container(
-                              height: MediaQuery.of(context).size.height / 3,
-                              width: MediaQuery.of(context).size.width,
-                              child: GoogleMap(
-                                initialCameraPosition: CameraPosition(
-                                    target: LatLng(currentPosition.latitude,
-                                        currentPosition.longitude),
-                                    zoom: 16.0),
-                                zoomGesturesEnabled: true,
-                                markers: Set<Marker>.of(markers),
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10.0,
-                            ),
-                            Expanded(
-                              child: (places.length > 0)
-                                  ? ListView.builder(
-                                      itemCount: places.length,
-                                      itemBuilder: (context, index) {
-                                        return FutureProvider(
-                                          create: (context) =>
-                                              geoService.getDistance(
-                                                  currentPosition.latitude,
-                                                  currentPosition.longitude,
-                                                  places[index]
-                                                      .geometry
-                                                      .location
-                                                      .lat,
-                                                  places[index]
-                                                      .geometry
-                                                      .location
-                                                      .lng),
-                                          child: Card(
-                                            child: ListTile(
-                                              title: Text(places[index].name),
-                                              subtitle: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: <Widget>[
-                                                  SizedBox(
-                                                    height: 3.0,
-                                                  ),
-                                                  (places[index].rating != null)
-                                                      ? Row(
-                                                          children: <Widget>[
-                                                            RatingBarIndicator(
-                                                              rating:
-                                                                  places[index]
-                                                                      .rating,
-                                                              itemBuilder: (context,
-                                                                      index) =>
-                                                                  Icon(
-                                                                      Icons
-                                                                          .star,
-                                                                      color: Colors
-                                                                          .amber),
-                                                              itemCount: 5,
-                                                              itemSize: 10.0,
-                                                              direction: Axis
-                                                                  .horizontal,
-                                                            )
-                                                          ],
-                                                        )
-                                                      : Row(),
-                                                  SizedBox(
-                                                    height: 5.0,
-                                                  ),
-                                                  Consumer<double>(
-                                                    builder: (context, meters,
-                                                        wiget) {
-                                                      return (meters != null)
-                                                          ? Text(
-                                                              '${places[index].vicinity} \u00b7 ${(meters).round()} m')
-                                                          : Container();
-                                                    },
-                                                  )
-                                                ],
-                                              ),
-                                              trailing: IconButton(
-                                                icon: Icon(Icons.directions),
-                                                color: Theme.of(context)
-                                                    .primaryColor,
-                                                onPressed: () {
-                                                  _launchMapsUrl(
-                                                      places[index]
-                                                          .geometry
-                                                          .location
-                                                          .lat,
-                                                      places[index]
-                                                          .geometry
-                                                          .location
-                                                          .lng);
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      })
-                                  : Center(
-                                      child:
-                                          Text('Δεν βρέθηκε διαθέσιμο parking'),
-                                    ),
-                            )
-                          ],
-                        )
-                      : Center(child: CircularProgressIndicator());
-                },
-              )
-            : Center(
-                child: CircularProgressIndicator(),
-              ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            // Add your onPressed code here!
-          },
-          label: Text('Βρες parking!'),
-          icon: Icon(EvaIcons.navigation),
-          backgroundColor: Colors.blue,
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        // type: BottomNavigationBarType.shifting,
-        // iconSize: 28,
-        selectedFontSize: 15,
-        unselectedFontSize: 12,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.home),
-            label: ('Home'),
-            backgroundColor: Colors.white,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.search),
-            label: ('Search'),
-            backgroundColor: Colors.white,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.person),
-            label: ('Profile'),
-            backgroundColor: Colors.white,
-          ),
-        ],
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-      ),
-      ),
-    );
-  }
-
-  void _launchMapsUrl(double lat, double lng) async {
-    final url = 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Error at launch $url';
-    }
-  }
-}
-
-*/

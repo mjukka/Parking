@@ -59,7 +59,7 @@ Future<String> showAlertDialog(BuildContext context) {
 
   // set up the AlertDialog
   AlertDialog alert = AlertDialog(
-    title: Text("Is there available parking here?"),
+    title: Text("Did you park?"),
     actions: [
       MaterialButton(
         elevation: 5.0,

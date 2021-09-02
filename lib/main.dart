@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mPark/models/place.dart';
 import 'package:mPark/screens/home.dart';
-import 'package:mPark/screens/parking.dart';
 import 'package:mPark/services/geolocator_service.dart';
 import 'package:mPark/services/places_service.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';

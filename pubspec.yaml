@@ -17,7 +17,7 @@ environment:
 
 dependencies:
   curved_navigation_bar: ^0.3.7
-  google_maps_flutter: ^1.0.6
+  google_maps_flutter: ^2.0.6
   location: ^3.0.0
   # flutter_i18n: ^0.22.3
   flutter:
@@ -28,14 +28,16 @@ dependencies:
   cupertino_icons: ^0.1.2
   geolocator: ^6.1.9
   geocoder: ^0.2.1
-  geoflutterfire: ^2.2.2
+  # geocoding: ^2.0.0
+  flutter_polyline_points: 0.2.4
+  fluttertoast: ^8.0.8
   provider: ^4.3.2+2
   url_launcher: ^5.4.2
   http: ^0.12.2
   flutter_rating_bar: ^3.2.0+1
-  firebase_core: "0.7.0"
-  firebase_auth: "^0.20.0"
-  cloud_firestore: "^0.16.0"
+  # firebase_core: ^0.7.0
+  # firebase_auth: ^0.20.0
+  # cloud_firestore: ^0.16.0
   eva_icons_flutter: ^2.0.1
 
 dev_dependencies:

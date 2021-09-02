@@ -25,7 +25,7 @@ class _HomeLoggedState extends State<HomeLogged> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: TopBar(
-        title: 'Parking App',
+        title: 'ParkEZ App',
         child: kAccountBtn,
         onPressed: () {
           Navigator.push(
@@ -52,7 +52,7 @@ class _HomeLoggedState extends State<HomeLogged> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/parking-icon.png'),
+                image: AssetImage('assets/images/logo.png'),
                 fit: BoxFit.none,
               ),
             ),
