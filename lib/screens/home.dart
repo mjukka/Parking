@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mPark/screens/newParking.dart';
 import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/screens/parking.dart';
@@ -16,11 +15,9 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
 
-  int _currentIndex = 0;
 
   final pages = [
     Home(),
-    NewParking(), // Search(),
     LoginPage(), // My Account(),
   ];
 
@@ -55,7 +52,8 @@ class _HomeState extends State<Home> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/logo.png'),
+                scale: 2.3,
+                image: AssetImage('assets/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -72,7 +70,6 @@ class _HomeState extends State<Home> {
         backgroundColor: Colors.blue,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
         // type: BottomNavigationBarType.shifting,
         // iconSize: 28,
         selectedFontSize: 15,
@@ -80,14 +77,11 @@ class _HomeState extends State<Home> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(EvaIcons.home),
+            //activeIcon: Icon(EvaIcons.homeOutline),
             label: ('Home'),
             backgroundColor: Colors.white,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.search),
-            label: ('Search'),
-            backgroundColor: Colors.white,
-          ),
+          
           BottomNavigationBarItem(
             icon: Icon(EvaIcons.person),
             label: ('Profile'),
@@ -96,9 +90,11 @@ class _HomeState extends State<Home> {
         ],
         onTap: (index) {
           setState(() {
-            _currentIndex = index;
+            if (index != 0) {
+            showToast('You need to sign in first!');
             Navigator.push(
-              context, CupertinoPageRoute(builder: (context) => pages[_currentIndex]));
+              context, CupertinoPageRoute(builder: (context) => pages[index]));
+            }
           });
         },
       ),

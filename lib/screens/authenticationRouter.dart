@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/screens/parking.dart';
@@ -12,12 +13,8 @@ class HomeLogged extends StatefulWidget {
 }
 
 class _HomeLoggedState extends State<HomeLogged> {
-
-  int _currentIndex = 0;
-
   final pages = [
     HomeLogged(),
-    // Search(),
     LoginPage(),
   ];
 
@@ -52,7 +49,8 @@ class _HomeLoggedState extends State<HomeLogged> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/logo.png'),
+                scale: 2.3,
+                image: AssetImage('assets/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -69,7 +67,6 @@ class _HomeLoggedState extends State<HomeLogged> {
         backgroundColor: Colors.blue,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
         // type: BottomNavigationBarType.shifting,
         // iconSize: 28,
         selectedFontSize: 15,
@@ -77,14 +74,11 @@ class _HomeLoggedState extends State<HomeLogged> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(EvaIcons.home),
+            activeIcon: Icon(EvaIcons.homeOutline),
             label: ('Home'),
             backgroundColor: Colors.white,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.search),
-            label: ('Search'),
-            backgroundColor: Colors.white,
-          ),
+        
           BottomNavigationBarItem(
             icon: Icon(EvaIcons.person),
             label: ('Profile'),
@@ -93,7 +87,8 @@ class _HomeLoggedState extends State<HomeLogged> {
         ],
         onTap: (index) {
           setState(() {
-            _currentIndex = index;
+            Navigator.push(context,
+              CupertinoPageRoute(builder: (context) => pages[index]));
           });
         },
       ),

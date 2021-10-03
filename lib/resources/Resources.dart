@@ -12,7 +12,7 @@ class Kassets {
   static const parking = 'assets/parking.png';
   static const shakeHands = 'assets/shake_hands.png';
   static const userFriendly = 'assets/user_friendly.png';
-  static const way = 'assets/way.png';
+  static const logo = 'assets/images/logo.png';
   static const group = 'assets/images/group1.png';
 }
 
@@ -33,7 +33,7 @@ class Kstrings {
   //Login
   static const registered = 'Registered?';
   static const not_registered = 'Not Registered?';
-  static const login = 'Login';
+  static const login = 'Sign in';
   static const mobile = 'Mobile Login';
   static const register = 'Register';
   static const forgot_password = 'Forgot your password?';

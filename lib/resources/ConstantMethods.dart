@@ -1,6 +1,7 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 kbackBtn(BuildContext context) {
   Navigator.of(context).pop();
@@ -22,6 +23,17 @@ kopenPageBottom(BuildContext context, Widget page) {
       builder: (BuildContext context) => page,
     ),
   );
+}
+
+showToast(String message) {
+  Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 18.0);
 }
 
 Widget kBackBtn = Icon(

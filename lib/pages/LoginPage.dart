@@ -1,8 +1,6 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
-import 'package:mPark/main.dart';
 import 'package:mPark/screens/authenticationRouter.dart';
 import 'package:mPark/screens/home.dart';
-import './MobileLoginPage.dart';
 import '../resources/ConstantMethods.dart';
 import '../resources/Resources.dart';
 import '../widgets/TopBar.dart';
@@ -143,9 +141,10 @@ class _LoginPageState extends State<LoginPage> {
                   Container(
                     height: 50,
                     width: MediaQuery.of(context).size.width,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      mainAxisSize: MainAxisSize.max,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         FloatingActionButton.extended(
                           heroTag: 'needHelp',

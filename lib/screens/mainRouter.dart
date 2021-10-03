@@ -3,23 +3,19 @@ import 'dart:ui';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:mPark/screens/newParking.dart';
+import 'package:mPark/screens/home.dart';
 import 'package:mPark/widgets/TopBar.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
 import 'package:mPark/pages/LoginPage.dart';
 
-class Home extends StatefulWidget {
+class MainRouter extends StatefulWidget {
   @override
-  _HomeState createState() => _HomeState();
+  _MainRouterState createState() => _MainRouterState();
 }
 
-class _HomeState extends State<Home> {
-
-  int _currentIndex = 0;
-
+class _MainRouterState extends State<MainRouter> {
   final pages = [
     Home(),
-    NewParking(), // Search(),
     LoginPage(), // My Account(),
   ];
 
@@ -54,7 +50,8 @@ class _HomeState extends State<Home> {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/logo.png'),
+                scale: 2.3,
+                image: AssetImage('assets/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -62,7 +59,6 @@ class _HomeState extends State<Home> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
         // type: BottomNavigationBarType.shifting,
         // iconSize: 28,
         selectedFontSize: 15,
@@ -70,12 +66,8 @@ class _HomeState extends State<Home> {
         items: [
           BottomNavigationBarItem(
             icon: Icon(EvaIcons.home),
+            activeIcon: Icon(EvaIcons.homeOutline),
             label: ('Home'),
-            backgroundColor: Colors.white,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(EvaIcons.search),
-            label: ('Search'),
             backgroundColor: Colors.white,
           ),
           BottomNavigationBarItem(
@@ -85,14 +77,16 @@ class _HomeState extends State<Home> {
           ),
         ],
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-            Navigator.push(
-              context, CupertinoPageRoute(builder: (context) => pages[_currentIndex]));
-          });
+          if (index != 0) {
+            showToast('You need to sign in first!');
+            setState(() {
+              Navigator.push(context,
+                  CupertinoPageRoute(builder: (context) => pages[index]));
+            });
+          }
         },
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      //floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
