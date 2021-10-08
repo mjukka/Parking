@@ -25,13 +25,22 @@ kopenPageBottom(BuildContext context, Widget page) {
   );
 }
 
-showToast(String message) {
+showErrorToast(String message) {
   Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
       gravity: ToastGravity.BOTTOM,
-      timeInSecForIosWeb: 1,
       backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 18.0);
+}
+
+showSuccessToast(String message) {
+  Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.green,
       textColor: Colors.white,
       fontSize: 18.0);
 }
@@ -70,6 +79,14 @@ var kTextFieldDecoration = InputDecoration(
   ),
   hintStyle: TextStyle(height: 1.5, fontWeight: FontWeight.w300),
   contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+  errorStyle: TextStyle(height: 1.5, color: Colors.red),
+  errorBorder: OutlineInputBorder(
+    borderSide: BorderSide(
+      color: Colors.red,
+      width: 2,
+      style: BorderStyle.solid,
+    ),
+  ),
 );
 
 var kTextFieldDecorationAddress = InputDecoration(
@@ -99,6 +116,8 @@ var kTextFieldDecorationAddress = InputDecoration(
 
 TextStyle ktitleStyle = TextStyle(fontWeight: FontWeight.w800);
 TextStyle ksubtitleStyle = TextStyle(fontWeight: FontWeight.w600);
+TextStyle kdrawerStyle = TextStyle(fontSize: 20, fontWeight: FontWeight.w400, wordSpacing: 3);
+TextStyle klistStyle = TextStyle(fontSize: 18, fontWeight: FontWeight.w400);
 
 SnackBar ksnackBar(BuildContext context, String message) {
   return SnackBar(

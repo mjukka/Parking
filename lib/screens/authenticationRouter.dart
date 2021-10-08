@@ -13,9 +13,10 @@ class HomeLogged extends StatefulWidget {
 }
 
 class _HomeLoggedState extends State<HomeLogged> {
+
   final pages = [
     HomeLogged(),
-    LoginPage(),
+    LoginPage(),  // My Account(),
   ];
 
   @override
@@ -23,10 +24,10 @@ class _HomeLoggedState extends State<HomeLogged> {
     return Scaffold(
       appBar: TopBar(
         title: 'ParkEZ App',
-        child: kAccountBtn,
+        child: Container(),
         onPressed: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => LoginPage()));
+          // Navigator.push(
+          //     context, MaterialPageRoute(builder: (context) => LoginPage()));
         },
       ),
       body: Stack(
@@ -50,7 +51,7 @@ class _HomeLoggedState extends State<HomeLogged> {
             decoration: BoxDecoration(
               image: DecorationImage(
                 scale: 2.3,
-                image: AssetImage('assets/icon/combo-parkez.png'),
+                image: AssetImage('assets/images/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -67,14 +68,13 @@ class _HomeLoggedState extends State<HomeLogged> {
         backgroundColor: Colors.blue,
       ),
       bottomNavigationBar: BottomNavigationBar(
-        // type: BottomNavigationBarType.shifting,
         // iconSize: 28,
         selectedFontSize: 15,
         unselectedFontSize: 12,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(EvaIcons.home),
-            activeIcon: Icon(EvaIcons.homeOutline),
+            activeIcon: Icon(EvaIcons.home),
+            icon: Icon(EvaIcons.homeOutline),
             label: ('Home'),
             backgroundColor: Colors.white,
           ),
@@ -87,8 +87,10 @@ class _HomeLoggedState extends State<HomeLogged> {
         ],
         onTap: (index) {
           setState(() {
-            Navigator.push(context,
-              CupertinoPageRoute(builder: (context) => pages[index]));
+            if (index != 0) {
+              Navigator.push(
+                context, CupertinoPageRoute(builder: (context) => pages[index]));
+            }
           });
         },
       ),

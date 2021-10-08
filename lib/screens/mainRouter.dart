@@ -14,9 +14,10 @@ class MainRouter extends StatefulWidget {
 }
 
 class _MainRouterState extends State<MainRouter> {
+
   final pages = [
-    Home(),
-    LoginPage(), // My Account(),
+    MainRouter(),
+    LoginPage(),
   ];
 
   @override
@@ -51,7 +52,7 @@ class _MainRouterState extends State<MainRouter> {
             decoration: BoxDecoration(
               image: DecorationImage(
                 scale: 2.3,
-                image: AssetImage('assets/icon/combo-parkez.png'),
+                image: AssetImage('assets/images/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -59,14 +60,13 @@ class _MainRouterState extends State<MainRouter> {
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
-        // type: BottomNavigationBarType.shifting,
         // iconSize: 28,
         selectedFontSize: 15,
         unselectedFontSize: 12,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(EvaIcons.home),
-            activeIcon: Icon(EvaIcons.homeOutline),
+            activeIcon: Icon(EvaIcons.home),
+            icon: Icon(EvaIcons.homeOutline),
             label: ('Home'),
             backgroundColor: Colors.white,
           ),
@@ -77,14 +77,14 @@ class _MainRouterState extends State<MainRouter> {
           ),
         ],
         onTap: (index) {
-          if (index != 0) {
-            showToast('You need to sign in first!');
-            setState(() {
-              Navigator.push(context,
-                  CupertinoPageRoute(builder: (context) => pages[index]));
-            });
-          }
-        },
+          setState(() {
+            if (index != 0) {
+              showErrorToast('You need to sign in first!');
+              Navigator.push(
+                context, CupertinoPageRoute(builder: (context) => pages[index]));
+            }
+          });
+        }
       ),
       //floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

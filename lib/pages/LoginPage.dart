@@ -1,10 +1,10 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:mPark/screens/authenticationRouter.dart';
 import 'package:mPark/screens/home.dart';
-import '../resources/ConstantMethods.dart';
-import '../resources/Resources.dart';
-import '../widgets/TopBar.dart';
-import 'ForgotPassword.dart';
+import 'package:mPark/resources/ConstantMethods.dart';
+import 'package:mPark/resources/Resources.dart';
+import 'package:mPark/widgets/TopBar.dart';
+import 'package:mPark/pages/ForgotPassword.dart';
 import 'package:flutter/material.dart';
 
 enum ButtonType { LOGIN, REGISTER }
@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       onTap: unfocus,
       child: Scaffold(
       key: _scaffoldKey,
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,  //FAB goes up when keyboard is open
       appBar: TopBar(
         title: !isRegistered ? Kstrings.login : Kstrings.register,
         child: kBackBtn,
@@ -67,6 +67,7 @@ class _LoginPageState extends State<LoginPage> {
                 style: ktitleStyle,
               ),
               onPressed: () {
+                !isRegistered ? showSuccessToast('Successful login!') : showSuccessToast('Registered successfully!');
                 kopenPage(context, HomeLogged());
               },
               icon: !isRegistered ? Icon(EvaIcons.logIn) : Icon(EvaIcons.checkmarkCircle)),
@@ -77,14 +78,12 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Hero(
-              tag: 'imageee',
-              child: Image.asset(
+            Image.asset(
                 Kassets.group,
                 width: MediaQuery.of(context).size.width - 50,
                 alignment: Alignment.topCenter,
               ),
-            ),
+            
             Padding(
               padding: EdgeInsets.only(left: 20, right: 20, top: 5),
               child: Column(
@@ -139,10 +138,10 @@ class _LoginPageState extends State<LoginPage> {
                   // tag: 'otpForget',
                   // child:
                   Container(
-                    height: 50,
+                    height: MediaQuery.of(context).size.height,
                     width: MediaQuery.of(context).size.width,
                     child: Wrap(
-                      alignment: WrapAlignment.spaceBetween,
+                      alignment: WrapAlignment.center,
                       //mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       //mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
@@ -167,6 +166,7 @@ class _LoginPageState extends State<LoginPage> {
                           },
                           // height: 40,
                         ),
+                        SizedBox(height: 70),
                         !isRegistered
                           ? MaterialButton(
                           // heroTag: 'needHelp',

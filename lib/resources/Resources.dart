@@ -59,6 +59,6 @@ class Kstrings {
   //Forgot Password
   static const reset_password = 'Reset password';
   static const enter_registered_email =
-      'Enter registered E-mail or ID to recover your account';
+      'Enter registered E-mail to recover your account';
   static const send_recovery_mail = 'Send recovery mail';
 }

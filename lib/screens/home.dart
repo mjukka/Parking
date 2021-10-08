@@ -53,7 +53,7 @@ class _HomeState extends State<Home> {
             decoration: BoxDecoration(
               image: DecorationImage(
                 scale: 2.3,
-                image: AssetImage('assets/icon/combo-parkez.png'),
+                image: AssetImage('assets/images/icon/combo-parkez.png'),
                 fit: BoxFit.none,
               ),
             ),
@@ -91,7 +91,7 @@ class _HomeState extends State<Home> {
         onTap: (index) {
           setState(() {
             if (index != 0) {
-            showToast('You need to sign in first!');
+            showErrorToast('You need to sign in first!');
             Navigator.push(
               context, CupertinoPageRoute(builder: (context) => pages[index]));
             }

@@ -3,7 +3,7 @@ import 'dart:math' show cos, sqrt, asin;
 
 bool isInsideCircle(
     double lat, double lon, double circleLat, double circleLon) {
-  var radius = 0.2;
+  var radius = 0.3;
   var p = 0.017453292519943295;
   var c = cos;
   var a = 0.5 -

@@ -1,8 +1,8 @@
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
-import '../resources/ConstantMethods.dart';
-import '../resources/Resources.dart';
-import '../widgets/TopBar.dart';
+import 'package:mPark/resources/ConstantMethods.dart';
+import 'package:mPark/resources/Resources.dart';
+import 'package:mPark/widgets/TopBar.dart';
 
 class MobileLoginPage extends StatefulWidget {
   static String loginTypeSelected = 'S';

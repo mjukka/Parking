@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:geocoder/geocoder.dart' as geoCo;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:mPark/models/Parkings.dart';
 import 'package:mPark/pages/LoginPage.dart';
 import 'package:mPark/resources/ConstantMethods.dart';
+import 'package:mPark/resources/Resources.dart';
 import 'package:provider/provider.dart';
 import 'package:mPark/services/places_service.dart';
 import 'package:mPark/services/marker_service.dart';
@@ -36,7 +36,8 @@ class _ParkingState extends State<Parking> {
   int percent = 500;
   bool toggleMarkers = true;
   bool togglePOI = true;
-  bool toggleCamLock = true;
+  bool toggleTraffic = true;
+  bool toggleCamLock = false;
   bool parkedSuccessfully = false;
   Marker carMarker = Marker(markerId: MarkerId("car"));
   Circle circle = Circle(circleId: CircleId("loc"));
@@ -48,11 +49,11 @@ class _ParkingState extends State<Parking> {
   List<LatLng> polylineCoordinates = [];
   bool isInside = false;
   bool permissions = false;
-  List<Parkings> parkings = [];
+  List<LastParking> lastparking = [];
   LatLng pressedPointStorage;
-    int counterSucc = 0;
-    int counter = 0;
- double prob = 0;
+  int counterSucc = 0;
+  int counter = 0;
+  double prob = 0;
 
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -60,9 +61,8 @@ class _ParkingState extends State<Parking> {
       FirebaseFirestore.instance.collection('parkings');
 
   int calculateProb() {
-   
     percent = 0;
-     prob = 0.0;
+    prob = 0.0;
     parkingsFB.get().then((querySnapshot) {
       querySnapshot.docs.forEach((result) {
         if (isInsideCircle(
@@ -78,15 +78,15 @@ class _ParkingState extends State<Parking> {
       });
     });
 
-      setState(() {
-            if(counter<1){
-      prob = 0.0;
-    }else{
-    prob = counterSucc / counter * 100;
-    }
-        percent = prob.toInt();
+    setState(() {
+      if (counter < 1) {
+        prob = 0.0;
+      } else {
+        prob = counterSucc / counter * 100;
+      }
+      percent = prob.toInt();
     });
- 
+
     print(prob.toString());
     print("---------calculateProb--------------");
 
@@ -114,7 +114,33 @@ class _ParkingState extends State<Parking> {
                     })
                     .then((value) => print("User Added"))
                     .catchError((error) => print("Failed to add user: $error"));
+
+                lastparking.add(LastParking(
+                  user: 'testUser',
+                  parkVicinity: pressedPointStorage,
+                  parkLocation: carMarker.position,
+                ));
                 parkedSuccessfully = true;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Row(
+                    children: [
+                      //Icon(Icons.add_location, size: 28),
+                      //SizedBox(width: 5),
+                      Text('Do you want to save this location?',
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                  backgroundColor: Colors.yellowAccent,
+                  duration: Duration(seconds: 10),
+                  action: SnackBarAction(
+                    label: 'Yes',
+                    textColor: Colors.black,
+                    onPressed: () {},
+                  ),
+                ));
                 Navigator.of(context).pop();
               },
             ),
@@ -179,11 +205,12 @@ class _ParkingState extends State<Parking> {
       myMarker.add(Marker(
         markerId: MarkerId(pressedPoint.toString()),
         position: pressedPoint,
+        //infoWindow: InfoWindow.
       ));
 
       circles.add(Circle(
           circleId: CircleId("diam"),
-          radius: 200,
+          radius: 300,
           zIndex: 1,
           strokeColor: Colors.blue,
           center: pressedPoint,
@@ -194,7 +221,7 @@ class _ParkingState extends State<Parking> {
     polylineCoordinates = [];
     polylines = {};
     parkedSuccessfully = false;
-calculateProb();
+    calculateProb();
     print(pressedPoint);
     print(carMarker.position);
 
@@ -204,7 +231,6 @@ calculateProb();
           carMarker.position.longitude,
           pressedPoint.latitude,
           pressedPoint.longitude);
-
     });
 
     print(isInsideCircle(circle.center.latitude, circle.center.longitude,
@@ -212,11 +238,13 @@ calculateProb();
   }
 
   _clearMarkers(LatLng foo) {
-    myMarker = [];
-    circles = [];
-    polylineCoordinates = [];
-    polylines = {};
-    pressedPointStorage = null;
+    setState(() {
+      myMarker = [];
+      circles = [];
+      polylineCoordinates = [];
+      polylines = {};
+      pressedPointStorage = null;
+    });
   }
 
   static final CameraPosition initialLocation = CameraPosition(
@@ -241,6 +269,7 @@ calculateProb();
           zIndex: 2,
           flat: true,
           anchor: Offset(0.5, 0.5),
+          consumeTapEvents: true,
           icon: BitmapDescriptor.fromBytes(imageData));
       circle = Circle(
           circleId: CircleId("loc"),
@@ -279,7 +308,6 @@ calculateProb();
                           LatLng(newLocalData.latitude, newLocalData.longitude),
                       tilt: 0,
                       zoom: 17.60)));
-              toggleCamLock = false;
             }
             updateMarkerAndCircle(newLocalData, imageData);
           }
@@ -335,72 +363,134 @@ calculateProb();
       create: (context) => placesProvider,
       child: Scaffold(
         drawer: Drawer(
-          child: Column(mainAxisSize: MainAxisSize.max, children: [
-            Hero(
-              tag: 'logodrawer',
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: MediaQuery.of(context).size.width,
-                alignment: Alignment.centerLeft,
-              ),
-            ),
-            ListTile(
-                title: Text('Where did I park?'),
-                onTap: () {
-                  if (parkings.length != 0) {
-                    myMarker.add(Marker(
-                      markerId: MarkerId("mycar"),
-                      position: parkings.last.parkLocation,
-                    ));
-                    Navigator.pop(context);
-                  }
-                }),
-            ListTile(
-              leading: Icon(
-                Icons.account_circle,
-                size: 60,
-              ),
-              title: Text('Sign in'),
-              onTap: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => LoginPage()));
-              },
-            ),
-          ]),
+          child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(height: 40),
+                Padding(
+                  padding: EdgeInsets.only(left: 20),
+                  child: Image.asset(Kassets.logo),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                ListTile(
+                        minVerticalPadding: 20,
+                        title: Text('Where did I park?', style: kdrawerStyle),
+                        onTap: () {
+                          if (lastparking.length != 0) {
+                            _clearMarkers(pressedPointStorage);
+                            myMarker.add(Marker(
+                              markerId: MarkerId("mycar"),
+                              infoWindow: InfoWindow(title: 'I parked here!'),
+                              position: lastparking.last.parkLocation,
+                            ));
+                            polylineCoordinates = [];
+                            polylines = {};
+                            _createPolylines(
+                              carMarker.position.latitude,
+                              carMarker.position.longitude,
+                              lastparking.last.parkLocation.latitude,
+                              lastparking.last.parkLocation.longitude);
+                            Navigator.pop(context);
+                          } else {
+                            showErrorToast('No last parking position detected');
+                            Navigator.pop(context);
+                          }
+                        }),
+                Divider(
+                  height: 6,
+                  thickness: 1,
+                  color: Colors.black,
+                  endIndent: 30,
+                ),
+                Padding(
+                  padding: EdgeInsets.only(left: 65, bottom: 20, top: 6),
+                  child: Text('Saved Parkings', style: kdrawerStyle),
+                ),
+                Expanded(
+                  flex: 6,
+                  child: ListView.builder(
+                    padding: EdgeInsets.only(left: 16),
+                      itemBuilder: (_, index) =>
+                        Text('Location $index', style: klistStyle, textScaleFactor: 1.5),
+                        itemCount: 15,
+                        //itemCount: lastparking.length,
+                    ),
+                ),
+                Divider(
+                  height: 6,
+                  thickness: 1,
+                  color: Colors.black,
+                  endIndent: 30,
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Align(
+                    alignment: FractionalOffset.bottomLeft,
+                    child: ListTile(
+                      contentPadding: EdgeInsets.only(bottom: 10, left: 10),
+                      leading: Icon(
+                        Icons.account_circle,
+                        size: 60,
+                      ),
+                      title: Text('My Account', style: TextStyle(fontSize: 16)),
+                      // onTap: () {
+                      //   Navigator.push(context,
+                      //       MaterialPageRoute(builder: (context) => LoginPage()));
+                      // },
+                    ),
+                  ),
+                ),
+              ]),
         ),
         appBar: AppBar(
-          title: Text('Find Parking'),
+          title: (permissions) ? Text('Find Parking') : Text('Enable Location'),
           actions: [
-            PopupMenuButton(
-                tooltip: 'Filters',
-                icon: Icon(Icons.filter_alt_rounded),
-                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                      PopupMenuItem(
-                        child: TextButton.icon(
-                            icon: Icon(Icons.garage_rounded),
-                            label: Text('Parking icons On/Off'),
-                            onPressed: () {
-                              setState(() {
-                                toggleMarkers = !toggleMarkers;
-                              });
-                            }),
-                      ),
-                      PopupMenuItem(
-                        child: TextButton.icon(
-                            icon: Icon(Icons.location_off),
-                            label: Text('Location icons On/Off'),
-                            onPressed: () {
-                              setState(() {
-                                togglePOI
-                                    ? _controller.setMapStyle(
-                                        '[{"featureType": "poi","stylers": [{"visibility": "off"}]}]')
-                                    : _controller.setMapStyle(
-                                        '[{"featureType": "poi","stylers": [{"visibility": "on"}]}]');
-                                togglePOI = !togglePOI;
-                              });
-                            }),
-                      ),
-                    ]),
+            (permissions)
+                ? PopupMenuButton(
+                    tooltip: 'Filters',
+                    icon: Icon(Icons.filter_alt_rounded),
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                          PopupMenuItem(
+                            child: TextButton.icon(
+                                icon: Icon(Icons.garage_rounded),
+                                label: Text('Parking icons On/Off'),
+                                onPressed: () {
+                                  setState(() {
+                                    toggleMarkers = !toggleMarkers;
+                                  });
+                                }),
+                          ),
+                          PopupMenuItem(
+                            child: TextButton.icon(
+                                icon: Icon(Icons.location_off),
+                                label: Text('Places icons On/Off'),
+                                onPressed: () {
+                                  setState(() {
+                                    togglePOI
+                                        ? _controller.setMapStyle(
+                                            '[{"featureType": "poi","stylers": [{"visibility": "off"}]}]')
+                                        : _controller.setMapStyle(
+                                            '[{"featureType": "poi","stylers": [{"visibility": "on"}]}]');
+                                    togglePOI = !togglePOI;
+                                  });
+                                }),
+                          ),
+                          PopupMenuItem(
+                            child: TextButton.icon(
+                                icon: Icon(Icons.traffic),
+                                label: Text('Traffic Map On/Off'),
+                                onPressed: () {
+                                  setState(() {
+                                    toggleTraffic = !toggleTraffic;
+                                  });
+                                }),
+                          ),
+                        ])
+                : Container(),
           ],
         ),
         body: (permissions)
@@ -422,12 +512,13 @@ calculateProb();
                                 circles: Set<Circle>.of([...circles, circle]),
                                 polylines: Set<Polyline>.of(polylines.values),
                                 onMapCreated: (GoogleMapController controller) {
+                                  toggleCamLock = true;
                                   getCurrentLocation();
                                   _controller = controller;
                                 },
                                 onLongPress: handlePress,
                                 onTap: _clearMarkers,
-                                trafficEnabled: true,
+                                trafficEnabled: toggleTraffic,
                                 zoomControlsEnabled: false,
                                 mapToolbarEnabled: false,
                               ),
@@ -437,9 +528,9 @@ calculateProb();
                               padding: EdgeInsets.only(top: 15),
                               child: (pressedPointStorage != null &&
                                       parkedSuccessfully == false)
-                                  ? Positioned(
+                                  ? /*Positioned(
                                       top: 20.0,
-                                      child: Container(
+                                      child:*/ Container(
                                         padding: EdgeInsets.symmetric(
                                             vertical: 6.0, horizontal: 12.0),
                                         decoration: BoxDecoration(
@@ -461,10 +552,41 @@ calculateProb();
                                             fontWeight: FontWeight.w600,
                                           ),
                                         ),
-                                      ),
-                                    )
-                                  : null,
-                            )
+                                      )
+                                    //)
+                                  : Container(),
+                            ),
+                            Container(
+                              alignment: Alignment.bottomRight,
+                              padding: EdgeInsets.only(bottom: 80, right: 16),
+                                    child: FloatingActionButton(
+                                        heroTag: null,
+                                        backgroundColor: Colors.white,
+                                        elevation: 10.0,
+                                        child: Icon(Icons.my_location_outlined, color: Colors.blue),
+                                        onPressed: () { 
+                                          _controller.animateCamera(CameraUpdate.newCameraPosition(
+                                              new CameraPosition(
+                                                  bearing: 0,
+                                                  target:
+                                                      LatLng(carMarker.position.latitude, carMarker.position.longitude),
+                                                  tilt: 0,
+                                                  zoom: 17.60)));
+                                        }),
+                                  ),
+                            Container(
+                              alignment: Alignment.bottomRight,
+                              padding: EdgeInsets.only(bottom: 145, right: 16),
+                                    child: FloatingActionButton(
+                                        heroTag: null,
+                                        tooltip: 'Lock camera on car',
+                                        backgroundColor: toggleCamLock ? Colors.green : Colors.white,
+                                        elevation: toggleCamLock ? 5.0 : 10.0,
+                                        child: Icon(toggleCamLock ? Icons.lock : Icons.lock_open, color: toggleCamLock ? Colors.white : Colors.blue),
+                                        onPressed: () {
+                                           toggleCamLock = !toggleCamLock;
+                                        }),
+                            ),
                           ])
                         : Center(
                             child: CircularProgressIndicator(),
@@ -472,42 +594,51 @@ calculateProb();
                   })
                 : null
             : Center(
-                child: Stack(children: [
-                Text('You need to enable location access!'),
-                TextButton(
-                    onPressed: requestPermissions,
-                    child: Text('Enable location'))
-              ])),
-        floatingActionButton: isInside
-            ? FloatingActionButton(
-                heroTag: 'parkbutton',
-                elevation: 8.0,
-                child: Icon(Icons.local_parking_rounded),
-                onPressed: () {
-                  if (pressedPointStorage != null) {
-                    foundParkingAlert(context);
-                  } else {
-                    showToast("No area is selected");
-                  }
-                })
-            : FloatingActionButton.extended(
-                heroTag: 'parkbutton',
-                elevation: 8.0,
-                label: Text('Navigate'),
-                icon: Icon(Icons.local_parking_rounded),
-                onPressed: () {
-                  if (pressedPointStorage != null) {
-                    polylineCoordinates = [];
-                    polylines = {};
-                    _createPolylines(
-                        carMarker.position.latitude,
-                        carMarker.position.longitude,
-                        pressedPointStorage.latitude,
-                        pressedPointStorage.longitude);
-                  } else {
-                    showToast("Please select an area");
-                  }
-                }),
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('You need to enable location access!',
+                          style: TextStyle(fontSize: 18)),
+                      OutlinedButton(
+                        onPressed: requestPermissions,
+                        child: Text('Enable location'),
+                        style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: Colors.black45)),
+                      ),
+                    ]),
+              ),
+        floatingActionButton: (permissions)
+            ? isInside
+                ? FloatingActionButton(
+                    heroTag: null,
+                    elevation: 8.0,
+                    child: Icon(Icons.local_parking_rounded),
+                    onPressed: () {
+                      if (pressedPointStorage != null) {
+                        foundParkingAlert(context);
+                      } else {
+                        showErrorToast("No area is selected");
+                      }
+                    })
+                : FloatingActionButton.extended(
+                    heroTag: null,
+                    elevation: 8.0,
+                    label: Text('Navigate'),
+                    icon: Icon(Icons.local_parking_rounded),
+                    onPressed: () {
+                      if (pressedPointStorage != null) {
+                        polylineCoordinates = [];
+                        polylines = {};
+                        _createPolylines(
+                            carMarker.position.latitude,
+                            carMarker.position.longitude,
+                            pressedPointStorage.latitude,
+                            pressedPointStorage.longitude);
+                      } else {
+                        showErrorToast("Please select an area");
+                      }
+                    })
+            : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
