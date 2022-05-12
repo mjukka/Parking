@@ -1,3 +1,3 @@
 # Flutter Parking App
 Find Parking with ParkEZ App
-# DIRECTIONS API
+Utilizing Directions API, Google Maps, Firebase and Firestore
